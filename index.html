@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice Activity: Light Up the Cold Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plum:#741b47;
+    --papaya:#ff8c42;
+    --sky:#3aa0ff;
+    --matcha:#8fd14f;
+    --butter:#FFFF02;
+    --berry:#ff5c8a;
+    --ink:#171c2e;
+    --soft:#505a73;
+    --bg:#e7f3ff;
+    --right:#15a25c;
+    --wrong:#e5484d;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{
+    font-family:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(ellipse 45% 40% at 0% 0%, rgba(255,140,66,.6), transparent 70%),
+      radial-gradient(ellipse 45% 40% at 100% 20%, rgba(116,27,71,.38), transparent 70%),
+      radial-gradient(ellipse 50% 45% at 90% 100%, rgba(143,209,79,.55), transparent 70%),
+      radial-gradient(ellipse 45% 40% at 5% 95%, rgba(58,160,255,.55), transparent 70%),
+      var(--bg);
+    background-attachment:fixed;min-height:100vh;overflow-x:hidden;
+  }
+  /* PCB traces */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><g fill='none' stroke='%233aa0ff' stroke-width='2' stroke-linecap='round'><path d='M0 30h40l20 20h50l20-20h30'/><path d='M30 160v-40l20-20v-30'/><path d='M120 160v-30l15-15h25'/><path d='M90 0v20l10 10'/></g><g fill='%23741b47' fill-opacity='.5'><circle cx='50' cy='70' r='4'/><circle cx='100' cy='30' r='4'/><circle cx='135' cy='115' r='4'/><circle cx='40' cy='30' r='3'/></g></svg>");background-size:160px 160px}
+  body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.28;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='190' height='190'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .09  0 0 0 0 .11  0 0 0 0 .18  0 0 0 .75 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>")}
+  .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:20px 18px 44px}
+
+  .hd{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .uni{font-weight:800;font-size:16px;color:var(--plum)}
+  .uni span{display:block;font-weight:500;font-size:12.5px;color:var(--soft)}
+  .hdR{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pa{display:inline-flex;align-items:center;gap:9px;padding:8px 14px;border-radius:12px;background:#fff;font-weight:700;font-size:13px;box-shadow:0 3px 0 #c9d6ea, 0 6px 14px rgba(23,28,46,.12);border:2px solid var(--ink)}
+  .pa .led{width:11px;height:11px;border-radius:50%;background:var(--butter);box-shadow:0 0 0 2px var(--ink), 0 0 12px var(--butter);animation:flick 2.2s infinite}
+  @keyframes flick{0%,40%,100%{opacity:1}45%{opacity:.25}50%{opacity:1}55%{opacity:.4}60%{opacity:1}}
+  .mono{font-family:"Fira Code",ui-monospace,Menlo,Consolas,monospace}
+  .cnt{font:700 12.5px "Fira Code",monospace;padding:7px 11px;border-radius:12px;background:var(--ink);color:#e5f1ff}
+
+  /* header pins */
+  .pins{display:flex;align-items:flex-end;gap:0;margin:18px 0 20px;background:#1d2440;border-radius:18px;padding:14px 16px 10px;box-shadow:0 8px 0 #0f1428, 0 16px 30px rgba(23,28,46,.25);overflow-x:auto}
+  .pin{flex:1 1 0;min-width:110px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+  .pin .bulb{width:22px;height:22px;border-radius:50%;background:#3a425f;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);transition:background .4s, box-shadow .4s}
+  .pin.now .bulb{background:var(--butter);box-shadow:0 0 0 3px rgba(255,255,2,.25), 0 0 16px var(--butter);animation:pulseB 1.4s infinite}
+  @keyframes pulseB{50%{box-shadow:0 0 0 7px rgba(255,255,2,.05), 0 0 22px var(--butter)}}
+  .pin .leg{width:8px;height:16px;background:linear-gradient(#ffd27a,#c9932c);border-radius:2px}
+  .pin .lbl{font:700 11px "Fira Code",monospace;color:#c6d4f2;text-align:center;white-space:nowrap}
+  .pin .lbl b{color:#fff;display:block;font-size:12px}
+
+  /* windows */
+  .win{background:#fff;border-radius:22px;border:2.5px solid var(--ink);box-shadow:0 8px 0 var(--ink);overflow:hidden;animation:pop .45s cubic-bezier(.2,1.2,.3,1) both}
+  @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:2.5px solid var(--ink);background:linear-gradient(90deg,#fff3e8,#e8f3ff 60%,#f1ffe4)}
+  .bar i{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+  .bar i:nth-child(1){background:var(--berry)}.bar i:nth-child(2){background:var(--butter)}.bar i:nth-child(3){background:var(--matcha)}
+  .bar span{margin-left:8px;font:700 12.5px "Fira Code",monospace;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .body{padding:24px}
+  h1{font-weight:800;font-size:clamp(28px,4.8vw,48px);line-height:1.02;margin:6px 0 12px;letter-spacing:-.02em}
+  h1 .glow{color:var(--plum);text-shadow:0 0 0 transparent;position:relative}
+  h1 .glow::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:10px;background:var(--butter);z-index:-1;border-radius:6px;filter:blur(1px)}
+  h2{font-weight:800;font-size:clamp(21px,2.8vw,28px);margin:4px 0 8px;line-height:1.1}
+  p{line-height:1.6}
+  .tag{font:700 12px "Fira Code",monospace;color:var(--papaya);text-transform:uppercase;letter-spacing:.06em}
+  .heroG{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center}
+  .scene{width:100%;height:auto}
+  .stations{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0 4px}
+  .stn{text-align:center;font-weight:700;font-size:12.5px;line-height:1.25;padding:10px 6px;border-radius:14px;background:#f5f9ff;border:2px solid var(--ink)}
+  .stn svg{width:36px;height:36px;display:block;margin:0 auto 6px}
+
+  /* keycap buttons */
+  .key{appearance:none;cursor:pointer;border:2.5px solid var(--ink);border-radius:14px;padding:12px 22px;font:700 15.5px "Lexend",sans-serif;color:#fff;background:var(--plum);box-shadow:0 6px 0 #3e0d26;transition:transform .08s, box-shadow .08s;display:inline-flex;align-items:center;gap:10px}
+  .key:hover{transform:translateY(-1px);box-shadow:0 7px 0 #3e0d26}
+  .key:active{transform:translateY(5px);box-shadow:0 1px 0 #3e0d26}
+  .key.butter{background:var(--butter);color:var(--ink);box-shadow:0 6px 0 #a6a600}
+  .key svg{width:18px;height:18px}
+  .key:focus-visible,.cap:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+  .acts{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+  /* intro */
+  .intro{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+  .chipI{width:140px;height:140px;border-radius:26px;border:3px solid var(--ink);display:grid;place-items:center;position:relative;box-shadow:0 8px 0 var(--ink)}
+  .chipI::before,.chipI::after{content:"";position:absolute;top:18px;bottom:18px;width:10px;background:repeating-linear-gradient(transparent 0 8px,#c9932c 8px 14px)}
+  .chipI::before{left:-13px}.chipI::after{right:-13px}
+  .chipI svg{width:84px;height:84px;animation:bob 2.8s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-5px)}}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .meta span{font-weight:600;font-size:12.5px;padding:6px 12px;border-radius:10px;border:2px solid var(--ink);background:#fff}
+
+  /* question */
+  .qtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .qtop b{font-weight:700}
+  .dots{display:flex;gap:6px;flex-wrap:wrap}
+  .dots i{width:14px;height:14px;border-radius:4px;border:2px solid var(--ink);background:#fff;transform:rotate(45deg)}
+  .dots i.r{background:var(--right)}.dots i.w{background:var(--wrong)}.dots i.n{background:var(--butter)}
+  .prompt{font-weight:600;font-size:clamp(16px,2.1vw,20px);line-height:1.4;margin:0 0 14px}
+  .panes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .pane{border:2.5px solid var(--ink);border-radius:16px;overflow:hidden;background:#fff}
+  .pane .ph{font:700 11.5px "Fira Code",monospace;padding:7px 12px;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:8px}
+  .pane .pc{padding:12px}
+  .field{font:600 12px "Lexend",sans-serif;color:var(--soft);margin:0 0 3px}
+  .val{font:700 14px "Fira Code",monospace;background:#f2f6fd;border:2px solid #cfdaf0;border-radius:10px;padding:7px 10px;margin-bottom:8px;word-break:break-all}
+  .serial{background:#151a2c;color:#b9f7a8;font:500 13px/1.6 "Fira Code",monospace;padding:12px 14px;min-height:118px;white-space:pre-wrap;word-break:break-word}
+  .serial .dim{color:#7d8bb0}
+  .serial .warn{color:#ffb38a}
+  .serial .new{animation:type .4s steps(12) both}
+  @keyframes type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  .devRow{display:flex;align-items:center;gap:12px}
+  .devRow svg{width:120px;height:auto;flex:0 0 auto}
+  #ledHalo{transition:opacity .5s}
+  #ledCore{transition:fill .5s}
+  .statechip{font:700 12px "Fira Code",monospace;padding:5px 9px;border-radius:8px;background:#f2f6fd;border:2px solid #cfdaf0}
+  .packet{position:absolute;width:16px;height:16px;border-radius:5px;background:var(--papaya);border:2px solid var(--ink);opacity:0;pointer-events:none}
+
+  .caps{display:grid;gap:10px}
+  .caps.c2{grid-template-columns:1fr 1fr}
+  .caps.c3{grid-template-columns:repeat(3,1fr)}
+  .cap{appearance:none;cursor:pointer;width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:2.5px solid var(--ink);background:linear-gradient(#fff,#f3f6fb);font:500 15px "Lexend",sans-serif;color:var(--ink);box-shadow:0 5px 0 #b9c6dc;transition:transform .08s, box-shadow .08s, background .2s}
+  .cap:hover:not([disabled]){transform:translateY(-2px);box-shadow:0 7px 0 #b9c6dc}
+  .cap:active:not([disabled]){transform:translateY(4px);box-shadow:0 1px 0 #b9c6dc}
+  .cap .kk{flex:0 0 auto;min-width:32px;height:32px;padding:0 6px;border-radius:8px;display:grid;place-items:center;font:700 13px "Fira Code",monospace;color:#fff;background:var(--ink);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+  .cap.big{flex-direction:column;text-align:center;gap:8px;padding:16px 10px;font-weight:700}
+  .cap.big svg{width:46px;height:46px}
+  .cap[disabled]{cursor:default}
+  .cap.right{background:#dff6e9;border-color:var(--right);box-shadow:0 5px 0 var(--right)}
+  .cap.wrong{background:#ffe3e3;border-color:var(--wrong);box-shadow:0 5px 0 var(--wrong);animation:buzz .3s}
+  .cap.dim{opacity:.4}
+  @keyframes buzz{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  .fb{display:none;margin-top:14px;border-radius:14px;border:2.5px solid var(--ink);overflow:hidden;animation:pop .35s ease both}
+  .fb.show{display:block}
+  .fb .fh{font:700 12px "Fira Code",monospace;padding:7px 12px;color:#fff;letter-spacing:.04em}
+  .fb.r .fh{background:var(--right)}.fb.w .fh{background:var(--wrong)}
+  .fb p{margin:0;padding:12px 14px;background:#fff}
+
+  /* results */
+  .resTop{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+  .seg7{background:#151a2c;border-radius:18px;padding:14px 18px;border:3px solid var(--ink);box-shadow:0 6px 0 var(--ink)}
+  .seg7 svg{display:block;height:84px;width:auto}
+  .seg7 small{display:block;text-align:center;font:700 11.5px "Fira Code",monospace;color:#9fb0d8;margin-top:6px}
+  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0}
+  .bl{text-align:center;border:2.5px solid var(--ink);border-radius:16px;padding:12px 8px;background:#fff}
+  .bl .lamp{width:30px;height:30px;border-radius:50%;margin:0 auto 8px;border:3px solid var(--ink)}
+  .bl b{display:block;font-size:13px;line-height:1.2}
+  .bl span{font:700 13px "Fira Code",monospace;color:var(--soft)}
+  .bl small{display:block;font-size:11px;color:var(--soft);margin-top:4px;line-height:1.3}
+  .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .rule{border:2.5px solid var(--ink);border-radius:16px;padding:12px;background:#fff;animation:pop .45s ease both}
+  .rule .mono{font-size:12px;color:var(--plum);font-weight:700}
+  .rule p{margin:4px 0 0;font-size:13.5px;line-height:1.45}
+  .review{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .review span{font-weight:600;font-size:12.5px;padding:6px 11px;border-radius:10px;background:#fff1e6;border:2px solid var(--ink)}
+  .foot{text-align:center;font-size:12px;font-weight:500;color:var(--soft);margin-top:22px}
+
+  @media (max-width:780px){
+    .heroG,.intro,.panes,.resTop{grid-template-columns:1fr}
+    .stations,.board{grid-template-columns:repeat(2,1fr)}
+    .rules{grid-template-columns:1fr}
+    .caps.c3{grid-template-columns:1fr}
+    .body{padding:18px}
+    .chipI{width:110px;height:110px}.chipI svg{width:64px;height:64px}
+    .seg7 svg{height:64px}
+    .pin{min-width:58px}
+    .pin .lbl{font-size:0}
+    .pin .lbl b{font-size:10.5px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="uni">Nexford University<span>MHY6700 Internet of Things · Module 5</span></div>
+    <div class="hdR"><span class="cnt" id="cnt" hidden></span><span class="pa"><span class="led"></span>Practice Activity</span></div>
+  </div>
+  <div class="pins" id="pins" aria-hidden="true"></div>
+  <main id="app" aria-live="polite"></main>
+  <div class="foot">Nexford University · MHY6700 Internet of Things</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var K = "#171c2e";
+  var LID = "123456";
+
+  /* ---------------- icons ---------------- */
+  var IC = {
+    send:'<svg viewBox="0 0 64 64"><rect x="6" y="14" width="30" height="36" rx="6" fill="#3aa0ff" stroke="'+K+'" stroke-width="3"/><rect x="12" y="20" width="18" height="12" rx="3" fill="#fff" stroke="'+K+'" stroke-width="2.4"/><circle cx="16" cy="42" r="3" fill="#FFFF02" stroke="'+K+'" stroke-width="2"/><circle cx="26" cy="42" r="3" fill="#ff5c8a" stroke="'+K+'" stroke-width="2"/><path d="M40 32h18M50 24l8 8-8 8" fill="none" stroke="#741b47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    doctor:'<svg viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="38" rx="7" fill="#151a2c" stroke="'+K+'" stroke-width="3"/><path d="M12 30h8l4-8 6 16 4-8h18" fill="none" stroke="#8fd14f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 56h16M32 48v8" stroke="'+K+'" stroke-width="3.5" stroke-linecap="round"/></svg>',
+    boards:'<svg viewBox="0 0 64 64"><rect x="4" y="22" width="26" height="30" rx="5" fill="#8fd14f" stroke="'+K+'" stroke-width="3"/><rect x="11" y="30" width="12" height="12" rx="2" fill="'+K+'"/><rect x="34" y="10" width="26" height="42" rx="5" fill="#ff8c42" stroke="'+K+'" stroke-width="3"/><rect x="39" y="16" width="16" height="10" rx="2" fill="#fff" stroke="'+K+'" stroke-width="2"/><path d="M39 32h16M39 38h16M39 44h10" stroke="'+K+'" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    split:'<svg viewBox="0 0 64 64"><path d="M38 22a10 10 0 0 1 19 4 8 8 0 0 1-3 15H36a9 9 0 0 1 2-19z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/><rect x="4" y="34" width="22" height="22" rx="6" fill="#ff8c42" stroke="'+K+'" stroke-width="3"/><circle cx="15" cy="45" r="4" fill="#FFFF02" stroke="'+K+'" stroke-width="2"/><path d="M26 40c6-2 8-6 10-10" fill="none" stroke="#741b47" stroke-width="3" stroke-dasharray="3 4" stroke-linecap="round"/></svg>',
+    lockLog:'<svg viewBox="0 0 64 64"><rect x="8" y="8" width="32" height="44" rx="5" fill="#fff" stroke="'+K+'" stroke-width="3"/><path d="M14 18h20M14 26h20M14 34h12" stroke="'+K+'" stroke-width="3" stroke-linecap="round"/><rect x="30" y="34" width="26" height="22" rx="5" fill="#741b47" stroke="'+K+'" stroke-width="3"/><path d="M36 34v-5a7 7 0 0 1 14 0v5" fill="none" stroke="'+K+'" stroke-width="3"/><circle cx="43" cy="44" r="3" fill="#FFFF02"/></svg>',
+    mcu:'<svg viewBox="0 0 48 48"><rect x="12" y="12" width="24" height="24" rx="4" fill="#8fd14f" stroke="'+K+'" stroke-width="2.6"/><rect x="18" y="18" width="12" height="12" rx="2" fill="'+K+'"/><path d="M18 6v6M24 6v6M30 6v6M18 36v6M24 36v6M30 36v6M6 18h6M6 24h6M6 30h6M36 18h6M36 24h6M36 30h6" stroke="'+K+'" stroke-width="2.6" stroke-linecap="round"/><circle cx="33" cy="15" r="2.5" fill="#FFFF02"/></svg>',
+    sbc:'<svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="30" rx="5" fill="#ff8c42" stroke="'+K+'" stroke-width="2.6"/><rect x="9" y="13" width="14" height="10" rx="2" fill="#fff" stroke="'+K+'" stroke-width="2"/><rect x="27" y="13" width="12" height="6" rx="1.5" fill="'+K+'"/><path d="M9 29h30" stroke="'+K+'" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M14 38v5M24 38v5M34 38v5" stroke="'+K+'" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    edge:'<svg viewBox="0 0 48 48"><rect x="8" y="14" width="32" height="26" rx="6" fill="#FFFF02" stroke="'+K+'" stroke-width="2.6"/><circle cx="24" cy="27" r="6" fill="#ff5c8a" stroke="'+K+'" stroke-width="2.4"/><path d="M24 6v6M14 8l3 5M34 8l-3 5" stroke="'+K+'" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    cloud:'<svg viewBox="0 0 48 48"><path d="M14 36h22a9 9 0 0 0 0-18 12 12 0 0 0-22-2 10 10 0 0 0 0 20z" fill="#3aa0ff" stroke="'+K+'" stroke-width="2.6" stroke-linejoin="round"/><path d="M18 28h14M18 23h8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>',
+    both:'<svg viewBox="0 0 48 48"><path d="M24 26h14a7 7 0 0 0 0-14 9 9 0 0 0-16-1" fill="#3aa0ff" stroke="'+K+'" stroke-width="2.6" stroke-linejoin="round"/><rect x="6" y="24" width="20" height="18" rx="5" fill="#FFFF02" stroke="'+K+'" stroke-width="2.6"/><circle cx="16" cy="33" r="4" fill="#ff5c8a" stroke="'+K+'" stroke-width="2"/><path d="M26 30c6 0 10-2 12-4" fill="none" stroke="#741b47" stroke-width="2.6" stroke-dasharray="3 3" stroke-linecap="round"/></svg>',
+    arrow:'<svg viewBox="0 0 20 20"><path d="M3 10h12M10 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  /* ---------------- content (Module 5 only) ---------------- */
+  var T1 = "kesho/"+LID+"/coldroom1/light/set";
+  var OUT = ["The LED turns on and the device publishes \"on\" to .../light/state","The LED turns off and the device publishes \"off\" to .../light/state","The device prints \"Ignored unknown command\" and does nothing else","Nothing happens: the device isn't subscribed to that topic","The broker disconnects one of the two clients"];
+
+  var ST = [
+    {name:"Predict the Device", pin:"SEND", icon:"send", tone:"#d9ecff",
+     intro:"Your connected status light runs the Module 5 sketch with LEARNER_ID set to "+LID+". It is subscribed to "+T1+". Send a message from the HiveMQ web client and predict what the device does.",
+     section:"Section 2: Connecting Your Device with MQTT",
+     qs:[
+       {t:"predict", topic:T1, payload:"on", start:"off", q:"You publish this message from the web client. What happens?", a:0, led:"on", lines:["Light ON"], why:"The topic matches the subscription and the payload is exactly a command the code expects, so the LED switches and the new state is published (retained)."},
+       {t:"predict", topic:T1, payload:"  OFF ", start:"on", q:"This time the payload has capitals and spaces around it. What happens?", a:1, led:"off", lines:["Light OFF"], why:"The callback trims the message and lowercases it before checking, so \"  OFF \" is treated as \"off\"."},
+       {t:"predict", topic:T1, payload:"blink", start:"on", q:"Someone sends a different word. What happens?", a:2, led:"same", lines:["Ignored unknown command: blink"], why:"The code accepts only \"on\" or \"off\" and ignores anything else. That's the security check working."},
+       {t:"predict", topic:"kesho/"+LID+"/coldroom2/light/set", payload:"on", start:"off", q:"You publish to cold room 2's topic, but this device is cold room 1. What happens?", a:3, led:"same", lines:[], why:"The device only subscribes to its own coldroom1 topic, so the broker never sends it this message."},
+       {t:"predict", topic:"Kesho/"+LID+"/coldroom1/light/set", payload:"on", start:"off", q:"Look closely at the first letter of the topic. What happens?", a:3, led:"same", lines:[], why:"Topics are case-sensitive. \"Kesho/...\" is a different topic from \"kesho/...\", so the device never receives it. Compare topics character by character."},
+       {t:"predict", topic:"(a classmate's device connects)", payload:"client ID: kesho-"+LID+"-arduino", start:"off", q:"A classmate's device connects with the same client ID as yours. What happens?", a:4, led:"same", lines:["Connecting to the MQTT broker... connected","Connecting to the MQTT broker... connected"], why:"Client IDs must be unique. If two clients use the same ID, the broker disconnects one, so the devices keep knocking each other off."}
+     ]},
+    {name:"Serial Monitor Doctor", pin:"DEBUG", icon:"doctor", tone:"#e8f8d8",
+     intro:"Your build log should read like a diagnosis: what you saw, what you checked, what you changed, and what happened. Read each Serial Monitor and name the most likely problem.",
+     section:"Section 2: Connecting Your Device with MQTT",
+     qs:[
+       {t:"doc", log:["Connecting to Wi-Fi..................",".........................................."], q:"In Wokwi, the device never gets past this line. What do you check first?", opts:["That the network name is exactly Wokwi-GUEST with an empty password","That LEARNER_ID is set","That the LED is wired the right way round","That the broker address is broker.hivemq.com"], a:0, why:"The device hasn't joined Wi-Fi yet, so nothing after it can work. On a kit, also check the name, the password, and that the network is 2.4 GHz."},
+       {t:"doc", log:["Connecting to Wi-Fi.... connected","Connecting to the MQTT broker... failed (state -2), trying again in 2 seconds","Connecting to the MQTT broker... failed (state -2), trying again in 2 seconds"], q:"What does the repeating \"state -2\" tell you?", opts:["The LED pin is wrong","The device can't reach the broker: check BROKER and PORT are unchanged, and try again in a minute","Someone sent an unknown command","The Wi-Fi password is wrong"], a:1, why:"Wi-Fi connected, but the broker connection keeps failing. Public brokers are sometimes busy, so check the settings and retry."},
+       {t:"doc", log:["Connecting to the MQTT broker... connected","Connecting to the MQTT broker... connected","Connecting to the MQTT broker... connected"], q:"The device connects, then drops and reconnects every few seconds. What is the most likely cause?", opts:["The resistor is the wrong value","The payload had spaces in it","Another client is using the same client ID: check LEARNER_ID is your own number","The topic is too long"], a:2, why:"The broker disconnects one of two clients with the same ID, so they keep knocking each other off."},
+       {t:"doc", log:["Connecting to the MQTT broker... connected","Send on or off to kesho/123456/coldroom1/light/set"], q:"The device is connected, but the LED doesn't respond and \"Light ON\" never appears when you publish. What do you check?", opts:["The LED's direction","The topic you published to, compared character by character with the one printed here","The Wi-Fi channel","The Arduino Cloud plan"], a:1, why:"If the message arrived, the Serial Monitor would print \"Light ON\" or \"Ignored unknown command.\" Nothing printed means the topics don't match."},
+       {t:"doc", log:["Ignored unknown command: start"], q:"What does this line mean?", opts:["The device is broken","The message arrived but wasn't exactly on or off, so the device ignored it","The broker is offline","The client ID is shared"], a:1, why:"That's the \"accept only what you expect\" security practice doing its job."}
+     ]},
+    {name:"Pick the Computer", pin:"BOARD", icon:"boards", tone:"#ffe8d6",
+     intro:"Microcontrollers are simple, low-power, and start instantly. Single-board computers run a full operating system and can gather data from many devices. Put the simplest computer that can do the job at the edge.",
+     section:"Section 3: Microcontrollers, Raspberry Pi, and Gateways",
+     qs:[
+       {t:"pick", q:"Read a door switch and drive the status light outside one cold room.", a:0, why:"Read a sensor, switch a light, keep working: one program, low power, instant start. That's a microcontroller's job."},
+       {t:"pick", q:"Collect readings from three cold rooms, keep a day of readings if the internet is down, and run the door rule for the site.", a:1, why:"Storage and several programs at once need a single-board computer, used as the site gateway."},
+       {t:"pick", q:"Send one milk temperature reading every 15 minutes from a village, running for years on a battery.", a:0, why:"A single-board computer would drain the battery. A microcontroller uses far less power."},
+       {t:"pick", q:"Run a local dashboard for the plant's control room.", a:1, why:"Dashboards, databases, and edge analytics are single-board computer work."},
+       {t:"pick", q:"Translate between the plant's industrial network and MQTT.", a:1, why:"Translating between protocols is a gateway job, which a single-board computer running Linux does well."},
+       {t:"mc", q:"Which statement about the Raspberry Pi Pico 2 W is correct?", opts:["It is a single-board computer that runs Linux","It is a microcontroller board, despite the Raspberry Pi name, and runs MicroPython","It has no Wi-Fi","It needs a full operating system to blink an LED"], a:1, why:"The Pico 2 W is a microcontroller board with Wi-Fi. It is your second device, on its own coldroom2 topics."}
+     ]},
+    {name:"Edge or Cloud?", pin:"DECIDE", icon:"split", tone:"#fff9a8",
+     intro:"Decide close, learn far. Urgent work that must keep running offline belongs at the edge; history and comparisons across sites belong in the cloud. Some jobs are split between the two.",
+     section:"Section 4: Edge or Cloud?",
+     qs:[
+       {t:"ec", q:"Turn on the status light when the cold-room door has been open for more than 10 minutes.", a:0, why:"It must react in seconds and work when the internet is down, so it runs on the microcontroller or the gateway."},
+       {t:"ec", q:"Alert the supervisor's phone about an open door.", a:2, why:"The gateway decides the alert, and the cloud delivers it to the phone. If the internet is down, the local light still works."},
+       {t:"ec", q:"Keep a year of temperature readings for food-safety auditors.", a:1, why:"Long-term storage belongs in the cloud, with the gateway keeping a buffer until the connection returns."},
+       {t:"ec", q:"Compare door-open time across the Nairobi and Pune plants each week.", a:1, why:"It needs data from many sites, and nobody needs it in seconds."},
+       {t:"ec", q:"Send a 15-minute summary to the cloud instead of every reading, to cut data costs.", a:0, why:"Summarizing before sending is edge analytics. Any alert still goes immediately."},
+       {t:"mc", q:"Why does Ecozen's Ecofrost cold room keep its critical work at the edge?", opts:["Cloud computing is not allowed in India","Power and connectivity are unreliable in rural areas, and produce can't wait for the cloud","Edge processing is always cheaper","The cloud cannot store temperatures"], a:1, why:"Farmers pay only if the room works every day, so it can't depend on a connection. Remote monitoring then lets the company service units and bill by use."}
+     ]},
+    {name:"Secure and Log", pin:"SHIP", icon:"lockLog", tone:"#f6dce8",
+     intro:"Your Module 4 baseline, at the scale of one device, plus the process evidence that Milestone 2 asks for.",
+     section:"Sections 2 and 4, and Milestone 2",
+     qs:[
+       {t:"mc", q:"Why do the client ID and topics include your learner ID?", opts:["The broker requires a learner ID to connect","It encrypts the messages","It gives your device a unique identity, so it can't be confused with anyone else's","It makes the device start faster"], a:2, why:"Unique identity is the first device security practice. It also keeps your topics separate from your classmates'."},
+       {t:"mc", q:"On the kit path, what must you do before you share your code or a screenshot?", opts:["Delete your Wi-Fi password from the code","Change the broker to Arduino Cloud","Remove the PubSubClient library","Rename the sketch"], a:0, why:"Keep secrets out of shared code. The course messages are made up, but your Wi-Fi password is real."},
+       {t:"mc", q:"Anyone can read and send messages on a public broker. What would a production system use instead?", opts:["A longer topic name","A private broker with a username and password per device, and encryption (MQTT over TLS)","More retained messages","A faster Wi-Fi network"], a:1, why:"That's why the course uses only made-up readings and commands on the public broker."},
+       {t:"mc", q:"The device publishes its state as a retained message. What does that give you?", opts:["A dashboard that subscribes later sees the light's latest state at once","Messages are encrypted","The LED stays on after a power cut","The broker deletes old messages faster"], a:0, why:"The broker keeps the latest retained message and sends it to anyone who subscribes later."},
+       {t:"mc", q:"Which build log entry is most useful for Milestone 2?", opts:["\"Day 2: did the MQTT part. Worked.\"","\"I asked AI and it fixed it.\"","\"Nov 12: device kept reconnecting; Serial Monitor showed it connecting every few seconds. LEARNER_ID was still 000000. Set it to mine; stable since.\"","\"Everything went fine.\""], a:2, why:"It has a date, the symptom, the evidence, the cause, the fix, and the result, so someone else could repeat it."}
+     ]}
+  ];
+
+  var TOTAL = ST.reduce(function(s,x){return s+x.qs.length;},0);
+  function fresh(){return {s:-1,q:0,r:ST.map(function(x){return x.qs.map(function(){return null;});}),n:0};}
+  var S = fresh();
+  var app = document.getElementById("app"), pins = document.getElementById("pins"), cnt = document.getElementById("cnt");
+  function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+  function pct(i){ return S.r[i].filter(function(x){return x;}).length / S.r[i].length; }
+  function done(i){ return S.r[i].every(function(x){return x!==null;}); }
+  function lampCol(i){ var p=pct(i); return p>=0.8?"#8fd14f":(p>=0.5?"#FFFF02":"#ff5c8a"); }
+
+  function drawPins(){
+    pins.innerHTML = ST.map(function(st,i){
+      var c = done(i) ? lampCol(i) : null;
+      var style = c ? 'style="background:'+c+';box-shadow:0 0 0 3px rgba(255,255,255,.15), 0 0 16px '+c+'"' : '';
+      return '<div class="pin'+(i===S.s && !c?' now':'')+'"><div class="bulb" '+style+'></div><div class="leg"></div><div class="lbl"><b>'+st.pin+'</b>'+esc(st.name)+'</div></div>';
+    }).join("");
+  }
+  function upCnt(){ cnt.hidden=false; cnt.textContent = S.n+"/"+TOTAL+" answered"; }
+
+  /* ---------------- start ---------------- */
+  function start(){
+    cnt.hidden = true; drawPins();
+    app.innerHTML =
+      '<section class="win"><div class="bar"><i></i><i></i><i></i><span>kesho/'+LID+'/coldroom1/light</span></div><div class="body">' +
+        '<div class="heroG"><div>' +
+          '<div class="tag">Kesho Foods · Milestone 2 practice</div>' +
+          '<h1>Light up the <span class="glow">cold room</span></h1>' +
+          '<p>The operations director wants a light outside a cold room that she can switch from her phone in Nairobi, and that tells her whether it\'s on. Test your connected build across five stations, from the first message to the build log.</p>' +
+        '</div>' + heroScene() + '</div>' +
+        '<div class="stations">'+ST.map(function(st){return '<div class="stn" style="background:'+st.tone+'">'+IC[st.icon]+esc(st.name)+'</div>';}).join("")+'</div>' +
+        '<p style="margin:12px 0 0"><b>How it works:</b> one attempt per question. Your answer is recorded, the correct answer is shown, and you keep going. '+TOTAL+' questions, about 20 minutes.</p>' +
+        '<div class="acts"><button class="key" id="go">Power on '+IC.arrow+'</button></div>' +
+      '</div></section>';
+    document.getElementById("go").addEventListener("click",function(){ openStation(0); });
+  }
+
+  function heroScene(){
+    return '<svg class="scene" viewBox="0 0 380 240" aria-hidden="true">' +
+      '<defs><path id="h1" d="M70 70 C 130 40, 160 40, 190 60"/><path id="h2" d="M190 60 C 230 80, 250 120, 300 150"/><path id="h3" d="M190 60 C 150 90, 130 140, 90 170"/></defs>' +
+      '<g stroke="'+K+'" stroke-width="2" stroke-dasharray="5 6" fill="none" opacity=".35"><use href="#h1"/><use href="#h2"/><use href="#h3"/></g>' +
+      /* phone */
+      '<rect x="40" y="30" width="58" height="92" rx="12" fill="#fff" stroke="'+K+'" stroke-width="3"/><rect x="48" y="44" width="42" height="58" rx="6" fill="#e7f3ff"/>' +
+      '<rect x="55" y="62" width="28" height="16" rx="8" fill="#741b47"/><circle cx="75" cy="70" r="6" fill="#FFFF02" stroke="'+K+'" stroke-width="2"><animate attributeName="cx" values="63;75;75;63;63" keyTimes="0;.1;.5;.6;1" dur="4s" repeatCount="indefinite"/></circle>' +
+      '<text x="69" y="96" text-anchor="middle" font-family="Fira Code,monospace" font-size="8" font-weight="700" fill="'+K+'">publish</text>' +
+      /* broker */
+      '<circle cx="190" cy="60" r="30" fill="#3aa0ff" stroke="'+K+'" stroke-width="3"/><text x="190" y="57" text-anchor="middle" font-family="Lexend,sans-serif" font-weight="800" font-size="9.5" fill="#fff">BROKER</text><text x="190" y="70" text-anchor="middle" font-family="Fira Code,monospace" font-size="7.5" fill="#e7f3ff">hivemq</text>' +
+      /* esp32 board */
+      '<g transform="translate(262,140)"><rect x="0" y="0" width="80" height="54" rx="8" fill="#151a2c" stroke="'+K+'" stroke-width="3"/><rect x="10" y="12" width="34" height="24" rx="3" fill="#2b3456"/><text x="27" y="28" text-anchor="middle" font-family="Fira Code,monospace" font-size="8" fill="#fff">ESP32</text>' +
+        '<circle cx="62" cy="24" r="16" fill="#FFFF02" opacity=".0"><animate attributeName="opacity" values="0;0;.55;.55;0" keyTimes="0;.2;.3;.7;.8" dur="4s" repeatCount="indefinite"/></circle><circle cx="62" cy="24" r="7" fill="#5b5f6e" stroke="'+K+'" stroke-width="2"><animate attributeName="fill" values="#5b5f6e;#5b5f6e;#FFFF02;#FFFF02;#5b5f6e" keyTimes="0;.2;.3;.7;.8" dur="4s" repeatCount="indefinite"/></circle>' +
+        '<text x="40" y="70" text-anchor="middle" font-family="Lexend,sans-serif" font-size="9" font-weight="700" fill="'+K+'">cold room 1</text></g>' +
+      /* pico */
+      '<g transform="translate(40,160)"><rect x="0" y="0" width="90" height="34" rx="6" fill="#8fd14f" stroke="'+K+'" stroke-width="3"/><rect x="34" y="7" width="22" height="20" rx="2" fill="'+K+'"/><g fill="#c9932c"><rect x="6" y="-6" width="4" height="6"/><rect x="16" y="-6" width="4" height="6"/><rect x="26" y="-6" width="4" height="6"/><rect x="66" y="-6" width="4" height="6"/><rect x="76" y="-6" width="4" height="6"/></g>' +
+        '<circle cx="76" cy="17" r="5" fill="#5b5f6e" stroke="'+K+'" stroke-width="2"><animate attributeName="fill" values="#5b5f6e;#5b5f6e;#ff8c42;#ff8c42;#5b5f6e" keyTimes="0;.45;.55;.9;1" dur="4s" repeatCount="indefinite"/></circle>' +
+        '<text x="45" y="50" text-anchor="middle" font-family="Lexend,sans-serif" font-size="9" font-weight="700" fill="'+K+'">Pico 2 W · cold room 2</text></g>' +
+      pk("#h1","0s","#ff8c42") + pk("#h2","0.9s","#ff8c42") + pk("#h1","2s","#741b47") + pk("#h3","2.9s","#741b47") +
+      '</svg>';
+    function pk(p,b,c){ var t0=parseFloat(b)/4, t1=(parseFloat(b)+0.9)/4; var kt="0;"+t0.toFixed(3)+";"+t1.toFixed(3)+";1"; var ko="0;"+t0.toFixed(3)+";"+(t0+0.002).toFixed(3)+";"+t1.toFixed(3)+";"+(t1+0.002).toFixed(3)+";1"; return '<rect x="-6" y="-6" width="12" height="12" rx="3" fill="'+c+'" stroke="'+K+'" stroke-width="2" opacity="0"><animateMotion dur="4s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="'+kt+'"><mpath href="'+p+'"/></animateMotion><animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="'+ko+'"/></rect>'; }
+  }
+
+  /* ---------------- station intro ---------------- */
+  function openStation(i){
+    S.s = i; S.q = 0; drawPins(); upCnt();
+    var st = ST[i];
+    app.innerHTML =
+      '<section class="win"><div class="bar"><i></i><i></i><i></i><span>station_'+(i+1)+'.ino</span></div><div class="body"><div class="intro">' +
+        '<div class="chipI" style="background:'+st.tone+'">'+IC[st.icon]+'</div>' +
+        '<div><div class="tag">Station '+(i+1)+' of '+ST.length+' · '+st.pin+'</div><h2>'+esc(st.name)+'</h2><p style="margin:0">'+esc(st.intro)+'</p>' +
+        '<div class="meta"><span>'+st.qs.length+' questions</span><span style="background:'+st.tone+'">'+esc(st.section)+'</span></div></div>' +
+      '</div><div class="acts"><button class="key" id="enter">Run station '+IC.arrow+'</button></div></div></section>';
+    document.getElementById("enter").addEventListener("click", ask);
+  }
+
+  function deviceSvg(state){
+    var on = state==="on";
+    return '<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="4" y="10" width="86" height="64" rx="9" fill="#151a2c" stroke="'+K+'" stroke-width="3"/><rect x="14" y="22" width="40" height="28" rx="3" fill="#2b3456"/><text x="34" y="40" text-anchor="middle" font-family="Fira Code,monospace" font-size="9" fill="#fff">ESP32</text>' +
+      '<path d="M90 30h14" stroke="#ff5c8a" stroke-width="3"/>' +
+      '<circle id="ledHalo" cx="112" cy="30" r="16" fill="#FFFF02" opacity="'+(on?".6":"0")+'"/><circle id="ledCore" cx="112" cy="30" r="8" fill="'+(on?"#FFFF02":"#5b5f6e")+'" stroke="'+K+'" stroke-width="2.4"/>' +
+      '<text x="47" y="88" text-anchor="middle" font-family="Lexend,sans-serif" font-size="9" font-weight="700" fill="'+K+'">cold room 1</text></svg>';
+  }
+  function setLed(state){
+    var h=document.getElementById("ledHalo"), c=document.getElementById("ledCore"), chip=document.getElementById("stchip");
+    if(!h) return;
+    var on = state==="on";
+    h.setAttribute("opacity", on?".6":"0"); c.setAttribute("fill", on?"#FFFF02":"#5b5f6e");
+    if (chip) chip.textContent = "light/state: " + state;
+  }
+
+  /* ---------------- question ---------------- */
+  function ask(){
+    var st = ST[S.s], q = st.qs[S.q];
+    var dots = st.qs.map(function(_,k){var r=S.r[S.s][k];return '<i class="'+(r===true?'r':r===false?'w':(k===S.q?'n':''))+'"></i>';}).join("");
+    var head = '<div class="qtop"><b>'+esc(st.name)+' · '+(S.q+1)+' of '+st.qs.length+'</b><div class="dots" aria-hidden="true">'+dots+'</div></div>';
+    var body = "", opts;
+    if (q.t==="predict"){
+      opts = OUT;
+      body = '<div class="panes">' +
+        '<div class="pane"><div class="ph" style="background:#e7f3ff">HiveMQ web client · publish</div><div class="pc"><p class="field">Topic</p><div class="val">'+esc(q.topic)+'</div><p class="field">Message</p><div class="val">'+esc(q.payload).replace(/ /g,"&middot;")+'</div></div></div>' +
+        '<div class="pane"><div class="ph" style="background:#f1ffe4">Device · cold room 1</div><div class="pc"><div class="devRow">'+deviceSvg(q.start)+'<span class="statechip" id="stchip">light/state: '+q.start+'</span></div></div>' +
+        '<div class="serial" id="serial"><span class="dim">Send on or off to '+esc(T1)+'</span>\n</div></div>' +
+      '</div><p class="prompt">'+esc(q.q)+'</p>' + capList(opts, false);
+    } else if (q.t==="doc"){
+      opts = q.opts;
+      body = '<div class="pane" style="margin-bottom:14px"><div class="ph" style="background:#151a2c;color:#b9f7a8">Serial Monitor · 115200 baud</div><div class="serial">'+q.log.map(function(l){return '<span class="'+(/failed|Ignored/.test(l)?'warn':'')+'">'+esc(l)+'</span>';}).join("\n")+'</div></div>' +
+        '<p class="prompt">'+esc(q.q)+'</p>' + capList(opts, false);
+    } else if (q.t==="pick"){
+      opts = ["Microcontroller","Single-board computer"];
+      body = '<p class="prompt">'+esc(q.q)+'</p><div class="caps c2"><button class="cap big" data-k="0">'+IC.mcu+'<span>Microcontroller</span></button><button class="cap big" data-k="1">'+IC.sbc+'<span>Single-board computer</span></button></div>';
+    } else if (q.t==="ec"){
+      opts = ["Edge","Cloud","Edge and cloud"];
+      body = '<p class="prompt">'+esc(q.q)+'</p><div class="caps c3"><button class="cap big" data-k="0">'+IC.edge+'<span>Edge</span></button><button class="cap big" data-k="1">'+IC.cloud+'<span>Cloud</span></button><button class="cap big" data-k="2">'+IC.both+'<span>Edge and cloud</span></button></div>';
+    } else {
+      opts = q.opts;
+      body = '<p class="prompt">'+esc(q.q)+'</p>' + capList(opts, false);
+    }
+    app.innerHTML = '<section class="win"><div class="bar"><i></i><i></i><i></i><span>'+esc(st.name.toLowerCase().replace(/[^a-z]+/g,"_").replace(/^_+|_+$/g,""))+'.log</span></div><div class="body">'+head+body+'<div class="fb" id="fb" role="status"></div><div class="acts"><button class="key butter" id="next" hidden></button></div></div></section>';
+    app.querySelectorAll(".cap").forEach(function(b){ b.addEventListener("click", function(){ answer(parseInt(b.getAttribute("data-k"),10), opts); }); });
+  }
+
+  function capList(opts){
+    return '<div class="caps">'+opts.map(function(o,k){return '<button class="cap" data-k="'+k+'"><span class="kk">'+"ABCDE"[k]+'</span><span>'+esc(o)+'</span></button>';}).join("")+'</div>';
+  }
+
+  function answer(k, opts){
+    var st = ST[S.s], q = st.qs[S.q];
+    if (S.r[S.s][S.q] !== null) return;
+    var ok = k===q.a;
+    S.r[S.s][S.q] = ok; S.n++; upCnt();
+    app.querySelectorAll(".cap").forEach(function(b){ var bk=parseInt(b.getAttribute("data-k"),10); b.disabled=true; if(bk===q.a) b.classList.add("right"); else if(bk===k) b.classList.add("wrong"); else b.classList.add("dim"); });
+    if (q.t==="predict"){
+      var ser = document.getElementById("serial");
+      var lines = q.lines.length ? q.lines : ["(no new output)"];
+      lines.forEach(function(l,idx){ setTimeout(function(){ var sp=document.createElement("span"); sp.className="new"+(/Ignored/.test(l)?" warn":"")+(/no new/.test(l)?" dim":""); sp.textContent=l+"\n"; ser.appendChild(sp); }, 250+idx*380); });
+      if (q.led!=="same") setTimeout(function(){ setLed(q.led); }, 300);
+    }
+    var dots = app.querySelectorAll(".dots i"); if (dots[S.q]) dots[S.q].className = ok?"r":"w";
+    var fb = document.getElementById("fb");
+    fb.className = "fb show " + (ok?"r":"w");
+    fb.innerHTML = '<div class="fh">'+(ok?"✓ RECORDED AS CORRECT":"✕ RECORDED AS INCORRECT")+'</div><p>'+(ok?"":"<b>Correct answer: "+esc(opts[q.a])+".</b> ")+esc(q.why)+'</p>';
+    var last = S.q===st.qs.length-1, lastS = S.s===ST.length-1;
+    var nx = document.getElementById("next");
+    nx.innerHTML = (last ? (lastS ? "Show the LED board" : "Next station") : "Next question") + " " + IC.arrow;
+    nx.hidden = false; nx.focus({preventScroll:true});
+    nx.addEventListener("click", function(){
+      if (!last){ S.q++; ask(); } else { drawPins(); if(!lastS) openStation(S.s+1); else results(); }
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  }
+
+  /* ---------------- seven-segment ---------------- */
+  var SEG = {"0":"abcdef","1":"bc","2":"abged","3":"abgcd","4":"fgbc","5":"afgcd","6":"afgedc","7":"abc","8":"abcdefg","9":"abcfgd","/":"slash"};
+  function seg7(str){
+    var w=46, gap=10, x=0, h='';
+    for (var i=0;i<str.length;i++){
+      var ch=str[i];
+      if (ch==="/"){ h += '<path d="M'+(x+26)+' 8L'+(x+8)+' 92" stroke="#FFFF02" stroke-width="7" stroke-linecap="round" opacity=".9"/>'; x += 34; continue; }
+      var on = SEG[ch]||"";
+      var segs = {a:[x+8,6,x+38,6],b:[x+42,10,x+42,46],c:[x+42,54,x+42,90],d:[x+8,94,x+38,94],e:[x+4,54,x+4,90],f:[x+4,10,x+4,46],g:[x+8,50,x+38,50]};
+      Object.keys(segs).forEach(function(s){ var p=segs[s]; h += '<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+p[2]+'" y2="'+p[3]+'" stroke="'+(on.indexOf(s)>=0?"#FFFF02":"#2a3150")+'" stroke-width="8" stroke-linecap="round"'+(on.indexOf(s)>=0?' style="filter:drop-shadow(0 0 4px #FFFF02)"':'')+'/>'; });
+      x += w+gap;
+    }
+    return '<svg viewBox="-4 0 '+(x)+' 100">'+h+'</svg>';
+  }
+
+  /* ---------------- results ---------------- */
+  function results(){
+    S.s = -1; drawPins();
+    var correct=0; S.r.forEach(function(r){ r.forEach(function(x){ if(x) correct++; }); });
+    var p = Math.round(correct/TOTAL*100);
+    var weak=[]; ST.forEach(function(st,i){ if(pct(i)<0.8 && weak.indexOf(st.section)<0) weak.push(st.section); });
+    var msg = p>=80 ? "Bright work. Your Milestone 2 walkthrough should show the same loop: a command from the web client, the LED responding, the state topic updating, and one security practice explained."
+                    : "Before you record your Milestone 2 walkthrough, revisit the parts of Module 5 listed below.";
+    app.innerHTML =
+      '<section class="win"><div class="bar"><i></i><i></i><i></i><span>results.log</span></div><div class="body">' +
+        '<div class="resTop"><div class="seg7">'+seg7(correct+"/"+TOTAL)+'<small>'+p+'% correct</small></div>' +
+        '<div><div class="tag">All stations run</div><h2>Your LED board</h2><p style="margin:0">'+esc(msg)+'</p>' +
+        (weak.length && p<80 ? '<div class="review">'+weak.map(function(w){return '<span>'+esc(w)+'</span>';}).join("")+'</div>' : '') + '</div></div>' +
+        '<div class="board">'+ST.map(function(st,i){ var c=S.r[i].filter(function(x){return x;}).length, col=lampCol(i); return '<div class="bl"><div class="lamp" style="background:'+col+';box-shadow:0 0 16px '+col+'"></div><b>'+esc(st.name)+'</b><span>'+c+'/'+st.qs.length+'</span><small>'+esc(st.section)+'</small></div>'; }).join("")+'</div>' +
+        '<div class="tag">Three rules your device lives by</div>' +
+        '<div class="rules">' +
+          '<div class="rule" style="animation-delay:.05s"><span class="mono">connect()</span><p>A unique client ID and topics that include your learner ID.</p></div>' +
+          '<div class="rule" style="animation-delay:.12s"><span class="mono">onMessage()</span><p>Act only on "on" or "off"; ignore everything else and publish the new state.</p></div>' +
+          '<div class="rule" style="animation-delay:.19s"><span class="mono">decide()</span><p>Decide close, learn far: urgent and offline work at the edge, history in the cloud.</p></div>' +
+        '</div>' +
+        '<div class="acts"><button class="key" id="again">Reboot and run again</button></div>' +
+      '</div></section>';
+    document.getElementById("again").addEventListener("click", function(){ S = fresh(); start(); window.scrollTo({top:0,behavior:"smooth"}); });
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>
